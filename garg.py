@@ -60,7 +60,7 @@ class Controller():
                         group_exists = True
                     
                     # Add Label and Entry for this parameter
-                    self.view.add_parameter_entry(group, text=param.name)
+                    self.view.add_parameter_entry(group, param)
                     
 class View(tk.Frame):
     """Displays a GUI interface for assigning values to function arguments.
@@ -112,9 +112,14 @@ class View(tk.Frame):
         
         return lf
         
-    def add_parameter_entry(self, master, **kwargs):
-        lb = tk.Label(master, **kwargs)
-        lb.pack()
+    def add_parameter_entry(self, master, param):
+        lb = tk.Label(master, text=param.name)
+        lb.grid(column=0)
+        
+        box = tk.Entry(master)
+        box.grid(column=1)
+        if param.default is not param.empty:
+            box.insert(0,param.default)
         
     class ButtonFrame(tk.Frame):
         """Contains the OK and Cancel buttons.
