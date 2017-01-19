@@ -47,13 +47,14 @@ class Controller():
         self.root.mainloop()
 
     def on_ok_button(self):
-        print(self.get_signature())
+        sig = self.get_signature()
+        print(sig)
 
     def on_cancel_button(self):
         self.root.destroy()
 
     def get_signature(self):
-        """Retrieve an instance of signature withe the values of the arguments
+        """Retrieve an instance of signature with the values of the arguments
            filled in
            
         """
