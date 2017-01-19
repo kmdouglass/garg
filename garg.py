@@ -38,14 +38,29 @@ class Controller():
         self.root = tk.Tk()
         
         self.model = inspect.signature(func)
-        self.view  = View(self.root)    
+        self.view  = View(self.root,self.on_ok_button,self.on_cancel_button)
     
     def run(self):
         self.root.title('GARG: GUI-Based Argument Assignment')
         self.root.deiconify()
         self.unpack_params()
         self.root.mainloop()
-        
+
+    def on_ok_button(self):
+        print(self.get_signature())
+
+    def on_cancel_button(self):
+        self.root.destroy()
+
+    def get_signature(self):
+        """Retrieve an instance of signature withe the values of the arguments
+           filled in
+           
+        """
+        # TODO: Implement conversion of arguments here
+        # just return the dict for now
+        return self.view.get_params_dict()
+    
     def unpack_params(self):
         for arg_type in self._ARG_TYPES:
             group_exists = False
@@ -66,8 +81,9 @@ class View(tk.Frame):
     """Displays a GUI interface for assigning values to function arguments.
     
     """
-    def __init__(self, master=None):
+    def __init__(self, master=None, on_ok=None, on_cancel=None):
         super().__init__(master)
+        self._argdict = {}
         
         tk.Grid.rowconfigure(self.master, 0, weight=1)
         tk.Grid.rowconfigure(self.master, 1, weight=1)
@@ -80,7 +96,8 @@ class View(tk.Frame):
             bg='red',
             width=400,
             height=300)
-        self._buttonFrame = self.ButtonFrame(self.master)
+        self._buttonFrame = self.ButtonFrame(self.master,on_ok,on_cancel)
+        
         # _groupFrame is a single frame that is drawn onto the canvas.
         # It contains multiple LabelFrames that are vertically stacked.
         self._groupFrame  = tk.Frame(self._canvas, bg='green')
@@ -120,16 +137,26 @@ class View(tk.Frame):
         box.grid(column=1)
         if param.default is not param.empty:
             box.insert(0,param.default)
+
+        # Keep a reference to get content of box later
+        self._argdict[param.name] = box
+
+    def get_params_dict(self):
+        """Retrive dictionary containing arguments names as
+           keys and argument values as values
+
+        """
+        return {name : entry.get() for name,entry in self._argdict.items()}
         
     class ButtonFrame(tk.Frame):
         """Contains the OK and Cancel buttons.
         
         """
-        def __init__(self, master=None):
+        def __init__(self, master=None,on_ok=None,on_cancel=None):
             super().__init__(master)
             
-            ok_button     = tk.Button(master=self, text='OK')
-            cancel_button = tk.Button(master=self, text='Cancel')
+            ok_button     = tk.Button(master=self, text='OK'    ,command=on_ok)
+            cancel_button = tk.Button(master=self, text='Cancel',command=on_cancel)
             
             ok_button.pack(side=tk.LEFT)
             cancel_button.pack(side=tk.RIGHT)
