@@ -1,14 +1,31 @@
 """GUI-based function argument assignment in Python.
 
-Author  : Kyle M. Douglass
-E-mail  : kyle.m.douglass@gmail.com
-Year    : 2017
-License : MIT
+Authors  : Kyle M. Douglass
+           Felix Schaber
+E-mail   : kyle.m.douglass@gmail.com
+Year     : 2017
+License  : MIT
 
 """
 
-import tkinter as tk
 import inspect
+import sys
+import tkinter as tk
+from collections import OrderedDict
+from ast import literal_eval
+
+# TODO:
+# 1. [X] Handle None vs. '' (empty string) (ast.literal_eval evaluates None)
+# 2. [X] Convert strings from View entries to Python objects (ast.literal_eval)
+# 3. [ ] Decide what Controller should return (function with bound arguments?)
+# 4. [X] Add option for Controller to raise error or ignore unspecified args
+# 5. [ ] Finish docstrings
+# 6. [ ] Ensure that words parameter and argument are used correctly in code
+# 7. [ ] Add wrapper to Controller so user only has to call 'garg'
+# 8. [ ] Write documentation
+# 9. [ ] Write tests
+# 10. [ ] Fix label frame scrolling bug
+# 11. [ ] Fix alignment of Labels and Entries
 
 class Controller():
     """Reads function arguments and assigns values via the GUI interface.
@@ -17,6 +34,10 @@ class Controller():
     ----------
     func : function
         The function for which the parameter signature will be extracted.
+    error_on_syntax : bool
+        Decides whether the program raises an error if arguments are not
+        syntactically correct. If False, the program skips missing arguments
+        and returns a partially bound argument list.
         
     Attributes
     ----------
@@ -24,6 +45,12 @@ class Controller():
         The input function's call signature. This is a Signature object from
         the standard library's inspect module and serves as the Model in the
         Model-View-Controller pattern.
+    view  : tk.Frame
+        The GUI presented to the user.
+    error_on_syntax : bool
+        Decides whether the program raises an error if arguments are not
+        syntactically correct. If False, the program skips missing arguments
+        and returns a partially bound argument list.
     
     """
     _ARG_TYPES = (
@@ -34,35 +61,55 @@ class Controller():
         inspect.Parameter.VAR_KEYWORD
     )
     
-    def __init__(self, func):
+    def __init__(self, func, error_on_syntax=True):
         self.root = tk.Tk()
         
         self.model = inspect.signature(func)
         self.view  = View(self.root,self.on_ok_button,self.on_cancel_button)
+        
+        self.error_on_syntax = error_on_syntax
+        
+    def get_signature(self):
+        """Retrieve an instance of signature with the values of the arguments
+           filled in
+           
+        """
+        view_params = self.view.get_params_dict()
+        params      = OrderedDict({})
+        
+        # Build the parameter list to bind to arguments; assumes the parameter
+        # list in the model is in the same order as the function signature.
+        for param in self.model.parameters.values():
+            try:
+                params[param.name] = literal_eval(view_params[param.name])
+            except SyntaxError:
+                # Skip adding parameter to params if error_on_syntax is False
+                if self.error_on_syntax:
+                    raise(SyntaxError(('Parameter \"%s\"\'s argument is '
+                                       'either not a valid Python literal or '
+                                       'is unspecified.' % param.name)))
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+                raise
+            
+        return params
     
     def run(self):
         self.root.title('GARG: GUI-Based Argument Assignment')
         self.root.deiconify()
         self.unpack_params()
         self.root.mainloop()
+        
+    def on_cancel_button(self):
+        self.root.destroy() 
 
     def on_ok_button(self):
+        # TODO: Return bound arguments (or something else)
         sig = self.get_signature()
-        print(sig)
-
-    def on_cancel_button(self):
-        self.root.destroy()
-
-    def get_signature(self):
-        """Retrieve an instance of signature with the values of the arguments
-           filled in
-           
-        """
-        # TODO: Implement conversion of arguments here
-        # just return the dict for now
-        return self.view.get_params_dict()
+        print(sig)           
     
     def unpack_params(self):
+        # TODO: Clean this up
         for arg_type in self._ARG_TYPES:
             group_exists = False
             
@@ -115,9 +162,7 @@ class View(tk.Frame):
         self._canvas.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self._vsb.grid(row=0, column=1, sticky=tk.N+tk.S)
         self._buttonFrame.grid(row=1, columnspan=2)
-        
-        # http://wenda.mojijs.com/Home/question/detail/id/7441544/p/1/index.html
-        
+
     def _on_canvas_resize(self, event=None):
         width  = self._canvas.winfo_width()
         height = self._canvas.winfo_height()
@@ -137,7 +182,8 @@ class View(tk.Frame):
         box = tk.Entry(master)
         box.grid(column=1)
         if param.default is not param.empty:
-            box.insert(0,param.default)
+            # __repr__() ensures a Python literal is printed
+            box.insert(0,param.default.__repr__()) 
 
         # Keep a reference to get content of box later
         self._argdict[param.name] = box
@@ -147,7 +193,7 @@ class View(tk.Frame):
            keys and argument values as values
 
         """
-        return {name : entry.get() for name,entry in self._argdict.items()}
+        return {name : entry.get() for name, entry in self._argdict.items()}
         
     class ButtonFrame(tk.Frame):
         """Contains the OK and Cancel buttons.
@@ -163,7 +209,7 @@ class View(tk.Frame):
             cancel_button.pack(side=tk.RIGHT)
         
 if __name__ == '__main__':
-    def test(a, b, *, c, d=10):
+    def test(a, b, *, c, d=10, e='hello', f=[1, 2, 'hello', {'a': 2}]):
         pass
     
     c = Controller(test)
