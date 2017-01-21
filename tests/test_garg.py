@@ -16,59 +16,61 @@ import garg
 
 class FunctionSignatureTestCase(unittest.TestCase):
     def test_positional_or_keyword(self):
-        """Controller detects positional or keyword arguments.
+        """Garg detects positional or keyword arguments.
         
         """
         def test_func(a, b):
             pass
         
-        c = garg.Controller(test_func)
+        c = garg.Garg(test_func)
         c.unpack_params()
-        args = c.view.get_params_dict()
+        args = c.view.get_args_dict()
         
         self.assertTrue(('a' in args) and ('b' in args))
         
     def test_keyword_only(self):
-        """Controller detects keyword only arguments.
+        """Garg detects keyword only arguments.
         
         """
         def test_func(*, a, b):
             pass
         
-        c = garg.Controller(test_func)
+        c = garg.Garg(test_func)
         c.unpack_params()
-        args = c.view.get_params_dict()
+        args = c.view.get_args_dict()
         
         self.assertTrue(('a' in args) and ('b' in args))
         
     def test_default_value(self):
-        """Controller correctly identifies keyword default values.
+        """Garg correctly identifies keyword default values.
         
         """
         def test_func(a=2, b='test'):
             pass
         
-        c = garg.Controller(test_func)
+        c = garg.Garg(test_func)
         c.unpack_params()
-        args = c.get_signature()
+        args = c.get_arguments()
         
         self.assertEqual(args['a'], 2)
         self.assertEqual(args['b'], 'test')
 
 class GUIErrorsTestCase(unittest.TestCase):        
     def test_unspecified_argument(self):
-        """Controller fails to parse arguments that are not specified.
+        """Garg fails to parse arguments that are not specified.
         
         """
+        # TODO: Write a test case for the inverse of this when error_on_syntax
+        # is False.
         def test_func(a):
             pass
         
-        c = garg.Controller(test_func)
+        c = garg.Garg(test_func)
         c.unpack_params()
         
         with self.assertRaises(SyntaxError):
             # Arguments were never specified because the GUI was never used
-            c.get_signature() 
+            c.get_arguments() 
         
 if __name__ == '__main__':
     unittest.main()
