@@ -20,21 +20,6 @@ import tkinter as tk
 from collections import OrderedDict
 from ast import literal_eval
 
-# TODO:
-# 1. [X] Handle None vs. '' (empty string) (ast.literal_eval evaluates None)
-# 2. [X] Convert strings from View entries to Python objects (ast.literal_eval)
-# 3. [X] Decide what Controller should return (function with bound arguments?)
-# 4. [X] Add option for Controller to raise error or ignore unspecified args
-# 5. [X] Finish docstrings
-# 6. [X] Ensure that words parameter and argument are used correctly in code
-# 7. [X] ~~Add wrapper to Controller so user only has to call 'garg'~~
-# 8. [X] Write documentation
-# 9. [X] Write tests
-# 10. [X] Fix label frame scrolling bug
-# 11. [X] Fix alignment of Labels and Entries
-# 12. [X] Fix full window resize of widgets bug
-# 13. [ ] Create setup.py and write installation instructions
-
 class Garg():
     """Reads function parameters and assigns argument values using a GUI.
     
@@ -128,6 +113,7 @@ class Garg():
         """
         args = self.get_arguments()
         self.ba = self.model.bind_partial(**args)
+        self.root.destroy()
     
     def unpack_params(self):
         """Extracts parameters from the signature and places them in the GUI.

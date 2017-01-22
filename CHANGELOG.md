@@ -1,6 +1,6 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
-
-
+## [v0.0.0]
+### Added
+- Main program functionality.
