@@ -28,22 +28,23 @@ from ast import literal_eval
 # 5. [X] Finish docstrings
 # 6. [X] Ensure that words parameter and argument are used correctly in code
 # 7. [X] ~~Add wrapper to Controller so user only has to call 'garg'~~
-# 8. [ ] Write documentation
-# 9. [ ] Write tests
+# 8. [X] Write documentation
+# 9. [X] Write tests
 # 10. [X] Fix label frame scrolling bug
 # 11. [X] Fix alignment of Labels and Entries
 # 12. [X] Fix full window resize of widgets bug
+# 13. [ ] Create setup.py and write installation instructions
 
 class Garg():
-    """Reads function parameters and assigns argument values via a GUI.
+    """Reads function parameters and assigns argument values using a GUI.
     
     Parameters
     ----------
     func : function
         The function for which the parameter signature will be extracted.
-    error_on_syntax : bool
+    ignore_errors : bool
         Decides whether the program raises an error if arguments are not
-        syntactically correct. If False, the program skips missing arguments
+        syntactically correct. If True, the program skips missing arguments
         and returns a partially bound argument list.
         
     Attributes
@@ -56,9 +57,9 @@ class Garg():
         Model-View-Controller pattern.
     view  : Frame
         The GUI presented to the user.
-    error_on_syntax : bool
+    ignore_errors : bool
         Decides whether the program raises an error if arguments are not
-        syntactically correct. If False, the program skips missing arguments
+        syntactically correct. If True, the program skips missing arguments
         and returns a partially bound argument list.
     
     """
@@ -67,14 +68,14 @@ class Garg():
         inspect.Parameter.KEYWORD_ONLY
     )
     
-    def __init__(self, func, error_on_syntax=True):
+    def __init__(self, func, ignore_errors=False):
         self.root = tk.Tk()
         
         self.model = inspect.signature(func)
         self.view  = View(self.root, self.on_ok_button, self.on_cancel_button)
         self.ba    = None
         
-        self.error_on_syntax = error_on_syntax
+        self.ignore_errors = ignore_errors
         
     def get_arguments(self):
         """Returns the values of the arguments set in the GUI.
@@ -95,11 +96,11 @@ class Garg():
             try:
                 params[param.name] = literal_eval(view_params[param.name])
             except SyntaxError:
-                # Skip adding parameter to params if error_on_syntax is False
-                if self.error_on_syntax:
-                    raise(SyntaxError(('Parameter \"%s\"\'s argument is '
+                # Skip adding parameter to params if ignore_errors is True
+                if not self.ignore_errors:
+                    raise(SyntaxError(('Parameter \"%s\"\'s argument %s is '
                                        'either not a valid Python literal or '
-                                       'is unspecified.' % param.name)))
+                                       'is unspecified.' % (param.name, view_params[param.name]))))
             except:
                 print("Unexpected error:", sys.exc_info()[0])
                 raise
@@ -153,9 +154,9 @@ class View(tk.Frame):
     
     Parameters
     ----------
-    master : Tk
+    master    : Tk
         The master Tk instance.
-    on_ok : method
+    on_ok     : method
         OK button callback.
     on_cancel : method
         Cancel button callback.
@@ -199,6 +200,10 @@ class View(tk.Frame):
 
     def _on_canvas_resize(self, event=None):
         """Resizes the group frame when the canvas is resized.
+        
+        Parameters
+        ----------
+        event : Event
         
         """
         width = self._canvas.winfo_width()
@@ -294,3 +299,5 @@ if __name__ == '__main__':
     c = Garg(test)
     c.run()
     print(c.ba)
+    print(c.ba.args)
+    print(c.ba.kwargs)
