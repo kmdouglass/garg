@@ -87,13 +87,13 @@ class ErrorsTestCase(unittest.TestCase):
             c.get_arguments()
             
     def test_unspecified_argument_no_error(self):
-        """Exceptions are overridden when ignore_errors is False.
+        """Exceptions are overridden when ignore_syntax_errors is True.
         
         """
         def test_func(a, b=10):
             pass
         
-        c = garg.Garg(test_func, ignore_errors=True)
+        c = garg.Garg(test_func, ignore_syntax_errors=True)
         c.unpack_params()
         params = c.get_arguments()
         
@@ -120,6 +120,28 @@ class ErrorsTestCase(unittest.TestCase):
         with self.assertRaises(SyntaxError):
             # The input argument cannot be parsed into a valid Python datatype
             c.get_arguments()
+            
+    def test_POSITIONAL_ONLY_raises_error(self):
+        """POSITIONAL_ONLY arguments raise an error.
+        
+        """
+        # pow accepts positional only parameters
+        c = garg.Garg(pow)
+        c.unpack_params()
+        
+        with self.assertRaises(KeyError):
+            # The positional only arguments will be in the argument list
+            c.get_arguments()
+        
+    def test_POSITIONAL_ONLY_no_error(self):
+        """POSITIONAL_ONLY arguments are ignored with ignore_positional_only.
+        
+        """
+        # pow has positional only parameters
+        c = garg.Garg(pow, ignore_positional_only=True)
+        c.unpack_params()
+        
+        c.get_arguments()
         
 if __name__ == '__main__':
     unittest.main()

@@ -42,10 +42,14 @@ class Garg():
         Model-View-Controller pattern.
     view  : Frame
         The GUI presented to the user.
-    ignore_errors : bool
+    ignore_syntax_errors : bool
         Decides whether the program raises an error if arguments are not
-        syntactically correct. If True, the program skips missing arguments
+        syntactically correct. If True, the program skips incorrect arguments
         and returns a partially bound argument list.
+    ignore_positional_only : bool
+        Decides whether parameters that are POSITIONAL_ONLY are ignored by
+        Garg. If True, the program skips these parameters and returns a
+        partially bound argument list.
     
     """
     _ARG_TYPES = (
@@ -53,14 +57,15 @@ class Garg():
         inspect.Parameter.KEYWORD_ONLY
     )
     
-    def __init__(self, func, ignore_errors=False):
+    def __init__(self, func, ignore_syntax_errors=False, ignore_positional_only=False):
         self.root = tk.Tk()
         
         self.model = inspect.signature(func)
         self.view  = View(self.root, self.on_ok_button, self.on_cancel_button)
         self.ba    = None
         
-        self.ignore_errors = ignore_errors
+        self.ignore_syntax_errors = ignore_syntax_errors
+        self.ignore_positional_only = ignore_positional_only
         
     def get_arguments(self):
         """Returns the values of the arguments set in the GUI.
@@ -82,10 +87,16 @@ class Garg():
                 params[param.name] = literal_eval(view_params[param.name])
             except SyntaxError:
                 # Skip adding parameter to params if ignore_errors is True
-                if not self.ignore_errors:
+                if not self.ignore_syntax_errors:
                     raise(SyntaxError(('Parameter \"%s\"\'s argument %s is '
                                        'either not a valid Python literal or '
                                        'is unspecified.' % (param.name, view_params[param.name]))))
+            except KeyError:
+                # Skip parameters that are in the signature but not set by Garg
+                if not self.ignore_positional_only:
+                    raise(KeyError(('Parameter \"%s\" is required by the '
+                                    'callable but not capable of assignment '
+                                    'by Garg.' % param.name)))
             except:
                 print("Unexpected error:", sys.exc_info()[0])
                 raise
