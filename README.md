@@ -98,13 +98,27 @@ the `BoundArguments` object.
 
 By default, a value that cannot be read by `ast.literal_eval` will
 raise a `SyntaxError`. If you want to ignore these errors, you can
-initialize a Garg instance with the `ignore_errors=True`
+initialize a Garg instance with the `ignore_syntax_errors=True`
 argument. Only arguments that are successfully bound will appear in
 the `BoundArguments` object after the **OK** button is pressed.
 
 ```python
 
-c = Garg(test, ignore_errors=True)
+c = Garg(test, ignore_syntax_errors=True)
+
+```
+
+## POSITIONAL_ONLY parameters
+
+Garg currently does not support functions with POSITIONAL_ONLY
+parameters and will raise an error if they are encountered. These
+errors can be supressed with the `ignore_positional_only=True`
+argument.
+
+```python
+
+# pow contains POSITIONAL_ONLY parameters
+c = Garg(pow, ignore_positional_only=True)
 
 ```
 
